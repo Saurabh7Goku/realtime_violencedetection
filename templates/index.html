@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title>Streaming </title>
+    <style>
+      *{
+        margin: 0;
+        padding: 0;
+      }
+
+      .video {
+        display: flex;
+        justify-content: center;
+      }
+      img {
+        width: 45vw;
+        height: 50vh;
+        margin: 10px;
+        padding: 5px;
+        border: 2px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <center><h1 style="text-shadow: -1px -1px blue; text-decoration: underline;">Invisible Minds</h1></center><br>
+    <div class="frame">
+      <div class="video">
+        <img src="{{ url_for('video_feed') }}">
+
+        <img src="{{ url_for('video_feed2') }}">
+      </div>
+
+      <br><br>
+
+      <div class="video">
+        <img src="{{ url_for('video_feed') }}">
+
+        <img src="{{ url_for('video_feed2') }}">
+      </div>
+    </div>
+  </body>
+</html>
