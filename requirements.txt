@@ -1,0 +1,9 @@
+Flask==1.1.2
+numpy==1.21.5
+opencv_python==4.7.0.68
+pandas==1.4.4
+pymongo==4.3.3
+scikit_image==0.19.2
+skimage==0.0
+tensorflow==2.11.0
+tensorflow_intel==2.11.0
