@@ -29,7 +29,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           image: goku2318/project
-          tags: v1, latest
           registry: docker.io
           username: ${{ secrets.DOCKER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
