@@ -5,3 +5,4 @@ pandas==1.4.4
 pymongo==4.3.3
 scikit_image==0.19.2
 tensorflow==2.5.3
+Gunicorn
