@@ -1,41 +1,276 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>Streaming </title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Streaming</title>
     <style>
-      *{
-        margin: 0;
-        padding: 0;
+      body {
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px;
+      }
+
+      .frame {
+        width: 60%;
+        margin-right: 20px;
+        background-color: #fff;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .frame form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .frame label {
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+
+      .frame input {
+        margin-bottom: 16px;
+        padding: 8px;
+      }
+
+      .frame input[type="submit"] {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
       }
 
       .video {
         display: flex;
         justify-content: center;
       }
-      img {
-        width: 45vw;
-        height: 50vh;
-        margin: 10px;
-        padding: 5px;
-        border: 2px solid black;
+
+      .video img {
+        width: 100%;
+        max-width: 800px;
+        height: auto;
+        border: 2px solid #333;
+      }
+
+      .sidebar {
+        height: 300px; /* Adjust the height as needed */
+        overflow-y: auto; /* Enable vertical scrolling */
+        width: 30%;
+        background-color: #fff;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar h2 {
+        font-size: 1.5em;
+        margin-bottom: 16px;
+      }
+
+      .violence-list {
+        width: max-content;
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .violence-list-item {
+        width: max-content;
+        margin-bottom: 8px;
+      }
+
+      /* Styles for the snackbar */
+      #snackbar {
+        visibility: hidden;
+        min-width: 250px;
+        margin-left: -125px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 2px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 30px;
+        font-size: 17px;
+      }
+
+      #snackbar.show {
+        visibility: visible;
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      }
+
+      @-webkit-keyframes fadein {
+        from {
+          bottom: 0;
+          opacity: 0;
+        }
+        to {
+          bottom: 30px;
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadein {
+        from {
+          bottom: 0;
+          opacity: 0;
+        }
+        to {
+          bottom: 30px;
+          opacity: 1;
+        }
+      }
+
+      @-webkit-keyframes fadeout {
+        from {
+          bottom: 30px;
+          opacity: 1;
+        }
+        to {
+          bottom: 0;
+          opacity: 0;
+        }
+      }
+
+      @keyframes fadeout {
+        from {
+          bottom: 30px;
+          opacity: 1;
+        }
+        to {
+          bottom: 0;
+          opacity: 0;
+        }
       }
     </style>
   </head>
   <body>
-    <center><h1 style="text-shadow: -1px -1px blue; text-decoration: underline;">Invisible Minds</h1></center><br>
-    <div class="frame">
-      <div class="video">
-        <img src="{{ url_for('video_feed') }}">
+    <center>
+      <h1 style="text-shadow: -1px -1px blue; text-decoration: underline">
+        Violence Detection On Live Feed
+      </h1>
+      <br />
+    </center>
+    <div class="container">
+      <div class="frame">
+        <form
+          action="{{ url_for('process_video') }}"
+          method="post"
+          enctype="multipart/form-data"
+          class="upload-form"
+        >
+          <div class="upload-container">
+            <label for="video_file">Upload Video:</label>
+            <input type="file" name="video_file" accept=".mp4, .avi" />
+          </div>
 
-        <img src="{{ url_for('video_feed2') }}">
+          <div class="url-container">
+            <label for="video_url">Enter Video URL:</label>
+            <input type="text" name="video_url" />
+          </div>
+
+          <input type="submit" value="Submit" />
+        </form>
+
+        <div class="video">
+          <img src="{{ url_for('video_feed') }}" />
+        </div>
       </div>
 
-      <br><br>
-
-      <div class="video">
-        <img src="{{ url_for('video_feed') }}">
-
-        <img src="{{ url_for('video_feed2') }}">
+      <div class="sidebar">
+        <h2>Violence Detections</h2>
+        <ul class="violence-list" id="violence-list">
+          {% for detection in violence_detections %}
+          <li class="violence-list-item">
+            <h8>Time Stamp: {{ detection.timestamp }} msec.</h8>
+          </li>
+          {% endfor %}
+        </ul>
       </div>
+
+      <!-- Snackbar for error messages -->
+      <div id="snackbar" class="error">Error: Video couldn't be loaded</div>
     </div>
+
+    <!-- Include Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+      // Connect to Socket.IO server
+      var socket = io.connect(
+        "http://" + document.domain + ":" + location.port
+      );
+
+      // Listen for 'update_sidebar' event
+      socket.on("update_sidebar", function (data) {
+        // Update violence list dynamically
+        var violenceList = document.getElementById("violence-list");
+        violenceList.innerHTML = "";
+        data.violence_detections.forEach(function (detection) {
+          var listItem = document.createElement("li");
+          listItem.className = "violence-list-item";
+          var link = document.createElement("a");
+          //   link.href = detection.video_url;
+          link.textContent = "Time Stamp : " + detection.timestamp + " msec.";
+          listItem.appendChild(link);
+          violenceList.appendChild(listItem);
+        });
+      });
+
+      // Listen for 'video_error' event
+      socket.on("video_error", function () {
+        // Display an error message when the video can't be loaded
+        var snackbar = document.getElementById("snackbar");
+        snackbar.textContent = "Error: Video couldn't be loaded";
+        snackbar.className = "show error";
+        setTimeout(function () {
+          snackbar.className = snackbar.className.replace("show", "");
+        }, 3000);
+      });
+
+      // Listen for 'video_end' event
+      socket.on("video_end", function () {
+        // Display a message when the video ends
+        var snackbar = document.getElementById("snackbar");
+        snackbar.textContent = "Video Ended";
+        snackbar.className = "show";
+        setTimeout(function () {
+          snackbar.className = snackbar.className.replace("show", "");
+        }, 3000);
+      });
+
+      // Function to end the video
+      function endVideo() {
+        fetch("/end_video", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Emit 'video_end' event
+              socket.emit("video_end");
+            }
+          });
+      }
+    </script>
+    <!-- Snackbar for displaying messages -->
+    <div id="snackbar"></div>
   </body>
 </html>
